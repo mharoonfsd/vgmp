@@ -17,6 +17,26 @@ workflows:
           ./app/src/main/cpp/prepare_libvgm_source.sh
           ./app/src/main/cpp/prepare_libkss_source.sh
 
+      - name: Create temporary signing key
+        script: |
+          keytool -genkeypair \
+            -v \
+            -keystore "$CM_BUILD_DIR/app/vgmp.keystore" \
+            -alias vgmp \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass vgmp-build \
+            -keypass vgmp-build \
+            -dname "CN=VGMP Build,O=VGMP,C=US"
+
+          cat > "$CM_BUILD_DIR/app/keystore.properties" <<EOF
+          storeFile=vgmp.keystore
+          storePassword=vgmp-build
+          keyAlias=vgmp
+          keyPassword=vgmp-build
+          EOF
+
       - name: Build debug APK
         script: |
           ./gradlew assembleDebug
