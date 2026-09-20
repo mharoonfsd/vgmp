@@ -69,4 +69,57 @@ workflows:
           EOF
 
       - name: Save submodule diagnostics
-       
+        script: |
+          set -e
+
+          echo "=== FINAL SUBMODULE DIAGNOSTIC ==="
+
+          echo "=== Git submodule status ==="
+          git submodule status --recursive
+
+          echo "=== libvgm ==="
+          find app/src/main/cpp/libvgm -maxdepth 1 -type f -print | head -30 || true
+
+          echo "=== libgme ==="
+          find app/src/main/cpp/libgme -maxdepth 1 -type f -print | head -30 || true
+
+          echo "=== libopenmpt ==="
+          find app/src/main/cpp/libopenmpt -maxdepth 1 -type f -print | head -30 || true
+
+          echo "=== libkss ==="
+          find app/src/main/cpp/libkss -maxdepth 1 -type f -print | head -30 || true
+
+          echo "=== libADLMIDI ==="
+          find app/src/main/cpp/libADLMIDI -maxdepth 1 -type f -print | head -30 || true
+
+          echo "=== libpsf ==="
+          find app/src/main/cpp/libpsf -maxdepth 1 -type f -print | head -30 || true
+
+          echo "=== libMusDoom ==="
+          find app/src/main/cpp/libMusDoom -maxdepth 1 -type f -print | head -30 || true
+
+          echo "=== CMakeLists.txt check ==="
+          for dir in \
+            app/src/main/cpp/libvgm \
+            app/src/main/cpp/libgme \
+            app/src/main/cpp/libopenmpt \
+            app/src/main/cpp/libkss \
+            app/src/main/cpp/libADLMIDI \
+            app/src/main/cpp/libpsf \
+            app/src/main/cpp/libMusDoom
+          do
+            if [ -f "$dir/CMakeLists.txt" ]; then
+              echo "OK: $dir/CMakeLists.txt"
+            else
+              echo "MISSING: $dir/CMakeLists.txt"
+            fi
+          done
+
+          echo "=== END FINAL SUBMODULE DIAGNOSTIC ==="
+
+      - name: Stop after submodule diagnostics
+        script: |
+          exit 1
+
+    artifacts:
+      - app/build/outputs/**/*.apk
