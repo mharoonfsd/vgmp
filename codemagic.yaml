@@ -1,0 +1,25 @@
+workflows:
+  vgmp-debug:
+    name: VGMP Android Debug
+    max_build_duration: 120
+
+    scripts:
+      - name: Set Android SDK location
+        script: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
+
+      - name: Initialize Git submodules
+        script: |
+          git submodule update --init --recursive
+
+      - name: Prepare native libraries
+        script: |
+          ./app/src/main/cpp/prepare_libvgm_source.sh
+          ./app/src/main/cpp/prepare_libkss_source.sh
+
+      - name: Build debug APK
+        script: |
+          ./gradlew assembleDebug
+
+    artifacts:
+      - app/build/outputs/**/*.apk
