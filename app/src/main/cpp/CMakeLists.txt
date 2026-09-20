@@ -187,7 +187,7 @@ set(GME_ZLIB OFF CACHE BOOL "" FORCE)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libgme gme_build)
 
 # Include libopenmpt for tracker formats (MOD, XM, S3M, IT, etc.)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libopenmpt openmpt_build)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/cmake/libopenmpt openmpt_build)
 
 # Include libkss for KSS format (MSX music files)
 # Note: libkss has its own emu2413/emu8950 which conflicts with libgme's emu2413
@@ -205,7 +205,7 @@ set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libMusDoom musdoom_build)
 
 # Include libpsf for PSF/PSF1 files (PlayStation music)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libpsf psf_build)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/cmake/libpsf psf_build)
 
 # JNI glue shared library
 add_library(vgmplayer SHARED vgmplayer_jni.cpp)
