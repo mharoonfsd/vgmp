@@ -68,9 +68,5 @@ workflows:
           keyPassword=vgmp-build
           EOF
 
-      - name: Stop after submodule diagnostics
-        script: |
-          exit 1
-
-    artifacts:
-      - app/build/outputs/**/*.apk
+      - name: Save submodule diagnostics
+       
