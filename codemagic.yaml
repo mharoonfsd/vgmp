@@ -1,76 +1,68 @@
-workflows:
-  vgmp-debug:
-    name: VGMP Android Debug
-    max_build_duration: 120
+scripts:
+  - name: Set Android SDK location
+    script: |
+      echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
 
-    scripts:
-      - name: Set Android SDK location
-        script: |
-          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
+  - name: Initialize and verify Git submodules
+    script: |
+      set -e
 
-      
-      - name: Prepare native libraries
-        script: |
-          ./app/src/main/cpp/prepare_libvgm_source.sh
-          ./app/src/main/cpp/prepare_libkss_source.sh
+      echo "=== Git submodule configuration ==="
+      git submodule status --recursive || true
 
-      - name: Initialize and verify Git submodules
-        script: |
-          set -e
+      echo "=== Synchronizing submodule URLs ==="
+      git submodule sync --recursive
 
-          echo "=== Git submodule configuration ==="
-          git submodule status --recursive || true
+      echo "=== Initializing submodules ==="
+      git submodule update --init --recursive
 
-          echo "=== Synchronizing submodule URLs ==="
-          git submodule sync --recursive
+      echo "=== Submodule status after initialization ==="
+      git submodule status --recursive
 
-          echo "=== Initializing submodules ==="
-          git submodule update --init --recursive
+      echo "=== Checking required CMakeLists.txt files ==="
+      for dir in \
+        app/src/main/cpp/libvgm \
+        app/src/main/cpp/libgme \
+        app/src/main/cpp/libopenmpt \
+        app/src/main/cpp/libkss \
+        app/src/main/cpp/libADLMIDI \
+        app/src/main/cpp/libpsf \
+        app/src/main/cpp/libMusDoom
+      do
+        echo "--- $dir ---"
+        if [ -f "$dir/CMakeLists.txt" ]; then
+          echo "OK: CMakeLists.txt exists"
+        else
+          echo "MISSING: CMakeLists.txt"
+          ls -la "$dir" || true
+        fi
+      done
 
-          ;  echo "=== Submodule status after initialization ==="
-          git submodule status --recursive
+  - name: Prepare native libraries
+    script: |
+      ./app/src/main/cpp/prepare_libvgm_source.sh
+      ./app/src/main/cpp/prepare_libkss_source.sh
 
-          echo "=== Checking required CMakeLists.txt files ==="
-          for dir in \
-            app/src/main/cpp/libvgm \
-            app/src/main/cpp/libgme \
-            app/src/main/cpp/libopenmpt \
-            app/src/main/cpp/libkss \
-            app/src/main/cpp/libADLMIDI \
-            app/src/main/cpp/libpsf \
-            app/src/main/cpp/libMusDoom
-          do
-            echo "--- $dir ---"
-            if [ -f "$dir/CMakeLists.txt" ]; then
-              echo "OK: CMakeLists.txt exists"
-            else
-              echo "MISSING: CMakeLists.txt"
-              ls -la "$dir" || true
-            fi
-          done
-      - name: Create temporary signing key
-        script: |
-          keytool -genkeypair \
-            -v \
-            -keystore "$CM_BUILD_DIR/app/vgmp.keystore" \
-            -alias vgmp \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -storepass vgmp-build \
-            -keypass vgmp-build \
-            -dname "CN=VGMP Build,O=VGMP,C=US"
+  - name: Create temporary signing key
+    script: |
+      keytool -genkeypair \
+        -v \
+        -keystore "$CM_BUILD_DIR/app/vgmp.keystore" \
+        -alias vgmp \
+        -keyalg RSA \
+        -keysize 2048 \
+        -validity 10000 \
+        -storepass vgmp-build \
+        -keypass vgmp-build \
+        -dname "CN=VGMP Build,O=VGMP,C=US"
 
-          cat > "$CM_BUILD_DIR/app/keystore.properties" <<EOF
-          storeFile=vgmp.keystore
-          storePassword=vgmp-build
-          keyAlias=vgmp
-          keyPassword=vgmp-build
-          EOF
+      cat > "$CM_BUILD_DIR/app/keystore.properties" <<EOF
+      storeFile=vgmp.keystore
+      storePassword=vgmp-build
+      keyAlias=vgmp
+      keyPassword=vgmp-build
+      EOF
 
-      - name: Stop after submodule diagnostics
-        script: |
-          exit 1
-
-    artifacts:
-      - app/build/outputs/**/*.apk
+  - name: Stop after submodule diagnostics
+    script: |
+      exit 1
