@@ -4,122 +4,123 @@ workflows:
     max_build_duration: 120
 
     scripts:
-      - name: Set Android SDK location
-        script: |
-          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
+      - |
+        echo "=== Setting Android SDK location ==="
+        echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
 
-      - name: Initialize and verify Git submodules
-        script: |
-          set -e
+      - |
+        echo "=== Initializing and verifying Git submodules ==="
 
-          echo "=== Git submodule configuration ==="
-          git submodule status --recursive || true
+        echo "=== Git submodule configuration ==="
+        git submodule status --recursive || true
 
-          echo "=== Synchronizing submodule URLs ==="
-          git submodule sync --recursive
+        echo "=== Synchronizing submodule URLs ==="
+        git submodule sync --recursive
 
-          echo "=== Initializing submodules ==="
-          git submodule update --init --recursive
+        echo "=== Initializing submodules ==="
+        git submodule update --init --recursive
 
-          echo "=== Submodule status after initialization ==="
-          git submodule status --recursive
+        echo "=== Submodule status after initialization ==="
+        git submodule status --recursive
 
-          echo "=== Checking required CMakeLists.txt files ==="
-          for dir in \
-            app/src/main/cpp/libvgm \
-            app/src/main/cpp/libgme \
-            app/src/main/cpp/libopenmpt \
-            app/src/main/cpp/libkss \
-            app/src/main/cpp/libADLMIDI \
-            app/src/main/cpp/libpsf \
-            app/src/main/cpp/libMusDoom
-          do
-            echo "--- $dir ---"
-            if [ -f "$dir/CMakeLists.txt" ]; then
-              echo "OK: CMakeLists.txt exists"
-            else
-              echo "MISSING: CMakeLists.txt"
-              ls -la "$dir" || true
-            fi
-          done
+        echo "=== Checking required CMakeLists.txt files ==="
 
-      - name: Prepare native libraries
-        script: |
-          ./app/src/main/cpp/prepare_libvgm_source.sh
-          ./app/src/main/cpp/prepare_libkss_source.sh
+        for dir in \
+          app/src/main/cpp/libvgm \
+          app/src/main/cpp/libgme \
+          app/src/main/cpp/libopenmpt \
+          app/src/main/cpp/libkss \
+          app/src/main/cpp/libADLMIDI \
+          app/src/main/cpp/libpsf \
+          app/src/main/cpp/libMusDoom
+        do
+          echo "--- $dir ---"
 
-      - name: Create temporary signing key
-        script: |
-          keytool -genkeypair \
-            -v \
-            -keystore "$CM_BUILD_DIR/app/vgmp.keystore" \
-            -alias vgmp \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -storepass vgmp-build \
-            -keypass vgmp-build \
-            -dname "CN=VGMP Build,O=VGMP,C=US"
+          if [ -f "$dir/CMakeLists.txt" ]; then
+            echo "OK: CMakeLists.txt exists"
+          else
+            echo "MISSING: CMakeLists.txt"
+            ls -la "$dir" || true
+          fi
+        done
 
-          cat > "$CM_BUILD_DIR/app/keystore.properties" <<EOF
-          storeFile=vgmp.keystore
-          storePassword=vgmp-build
-          keyAlias=vgmp
-          keyPassword=vgmp-build
-          EOF
+      - |
+        echo "=== Preparing native libraries ==="
 
-      - name: Save submodule diagnostics
-        script: |
-          set -e
+        ./app/src/main/cpp/prepare_libvgm_source.sh
+        ./app/src/main/cpp/prepare_libkss_source.sh
 
-          echo "=== FINAL SUBMODULE DIAGNOSTIC ==="
+      - |
+        echo "=== Creating temporary signing key ==="
 
-          echo "=== Git submodule status ==="
-          git submodule status --recursive
+        keytool -genkeypair \
+          -v \
+          -keystore "$CM_BUILD_DIR/app/vgmp.keystore" \
+          -alias vgmp \
+          -keyalg RSA \
+          -keysize 2048 \
+          -validity 10000 \
+          -storepass vgmp-build \
+          -keypass vgmp-build \
+          -dname "CN=VGMP Build,O=VGMP,C=US"
 
-          echo "=== libvgm ==="
-          find app/src/main/cpp/libvgm -maxdepth 1 -type f -print | head -30 || true
+        cat > "$CM_BUILD_DIR/app/keystore.properties" <<EOF
+        storeFile=vgmp.keystore
+        storePassword=vgmp-build
+        keyAlias=vgmp
+        keyPassword=vgmp-build
+        EOF
 
-          echo "=== libgme ==="
-          find app/src/main/cpp/libgme -maxdepth 1 -type f -print | head -30 || true
+      - |
+        echo "=== FINAL SUBMODULE DIAGNOSTIC ==="
 
-          echo "=== libopenmpt ==="
-          find app/src/main/cpp/libopenmpt -maxdepth 1 -type f -print | head -30 || true
+        echo "=== Git submodule status ==="
+        git submodule status --recursive
 
-          echo "=== libkss ==="
-          find app/src/main/cpp/libkss -maxdepth 1 -type f -print | head -30 || true
+        echo "=== libvgm ==="
+        find app/src/main/cpp/libvgm -maxdepth 1 -type f -print | head -30 || true
 
-          echo "=== libADLMIDI ==="
-          find app/src/main/cpp/libADLMIDI -maxdepth 1 -type f -print | head -30 || true
+        echo "=== libgme ==="
+        find app/src/main/cpp/libgme -maxdepth 1 -type f -print | head -30 || true
 
-          echo "=== libpsf ==="
-          find app/src/main/cpp/libpsf -maxdepth 1 -type f -print | head -30 || true
+        echo "=== libopenmpt ==="
+        find app/src/main/cpp/libopenmpt -maxdepth 1 -type f -print | head -30 || true
 
-          echo "=== libMusDoom ==="
-          find app/src/main/cpp/libMusDoom -maxdepth 1 -type f -print | head -30 || true
+        echo "=== libkss ==="
+        find app/src/main/cpp/libkss -maxdepth 1 -type f -print | head -30 || true
 
-          echo "=== CMakeLists.txt check ==="
-          for dir in \
-            app/src/main/cpp/libvgm \
-            app/src/main/cpp/libgme \
-            app/src/main/cpp/libopenmpt \
-            app/src/main/cpp/libkss \
-            app/src/main/cpp/libADLMIDI \
-            app/src/main/cpp/libpsf \
-            app/src/main/cpp/libMusDoom
-          do
-            if [ -f "$dir/CMakeLists.txt" ]; then
-              echo "OK: $dir/CMakeLists.txt"
-            else
-              echo "MISSING: $dir/CMakeLists.txt"
-            fi
-          done
+        echo "=== libADLMIDI ==="
+        find app/src/main/cpp/libADLMIDI -maxdepth 1 -type f -print | head -30 || true
 
-          echo "=== END FINAL SUBMODULE DIAGNOSTIC ==="
+        echo "=== libpsf ==="
+        find app/src/main/cpp/libpsf -maxdepth 1 -type f -print | head -30 || true
 
-      - name: Stop after submodule diagnostics
-        script: |
-          exit 1
+        echo "=== libMusDoom ==="
+        find app/src/main/cpp/libMusDoom -maxdepth 1 -type f -print | head -30 || true
+
+        echo "=== CMakeLists.txt check ==="
+
+        for dir in \
+          app/src/main/cpp/libvgm \
+          app/src/main/cpp/libgme \
+          app/src/main/cpp/libopenmpt \
+          app/src/main/cpp/libkss \
+          app/src/main/cpp/libADLMIDI \
+          app/src/main/cpp/libpsf \
+          app/src/main/cpp/libMusDoom
+        do
+          if [ -f "$dir/CMakeLists.txt" ]; then
+            echo "OK: $dir/CMakeLists.txt"
+          else
+            echo "MISSING: $dir/CMakeLists.txt"
+          fi
+        done
+
+        echo "=== END FINAL SUBMODULE DIAGNOSTIC ==="
+
+      - |
+        echo "=== Stopping after diagnostics ==="
+        exit 1
 
     artifacts:
       - app/build/outputs/**/*.apk
